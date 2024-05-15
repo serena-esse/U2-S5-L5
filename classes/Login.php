@@ -1,126 +1,127 @@
 <?php
 
 /**
- * Classe Login
- * gestisce il processo di accesso e logout dell'utente
+ * Class login
+ * handles the user's login and logout process
  */
 class Login
 {
     /**
-     * @var object La connessione al database
+     * @var object The database connection
      */
     private $db_connection = null;
     /**
-     * @var array Collezione di messaggi di errore
+     * @var array Collection of error messages
      */
     public $errors = array();
     /**
-     * @var array Collezione di messaggi di successo / neutrali
+     * @var array Collection of success / neutral messages
      */
     public $messages = array();
 
     /**
-     * La funzione "__construct()" parte automaticamente ogni volta che un oggetto di questa classe viene creato,
-     * quando fai "$login = new Login();"
+     * the function "__construct()" automatically starts whenever an object of this class is created,
+     * you know, when you do "$login = new Login();"
      */
     public function __construct()
     {
-        // crea/leggi la sessione, assolutamente necessario
+        // create/read session, absolutely necessary
         session_start();
 
-        // controlla le azioni di login possibili:
-        // se l'utente ha provato a fare il logout (avviene quando l'utente clicca sul pulsante di logout)
+        // check the possible login actions:
+        // if user tried to log out (happen when user clicks logout button)
         if (isset($_GET["logout"])) {
             $this->doLogout();
         }
-        // login tramite dati post (se l'utente ha appena inviato un modulo di accesso)
+        // login via post data (if user just submitted a login form)
         elseif (isset($_POST["login"])) {
             $this->dologinWithPostData();
         }
     }
 
     /**
-     * accedi con i dati post
+     * log in with post data
      */
     private function dologinWithPostData()
     {
-        // controlla i contenuti del modulo di accesso
+        // check login form contents
         if (empty($_POST['user_name'])) {
-            $this->errors[] = "Il campo Nome utente era vuoto.";
+            $this->errors[] = "Username field was empty.";
         } elseif (empty($_POST['user_password'])) {
-            $this->errors[] = "Il campo Password era vuoto.";
+            $this->errors[] = "Password field was empty.";
         } elseif (!empty($_POST['user_name']) && !empty($_POST['user_password'])) {
 
-            // crea una connessione al database, utilizzando le costanti da config/db.php (che abbiamo caricato in index.php)
+            // create a database connection, using the constants from config/db.php (which we loaded in index.php)
             $this->db_connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
-            // cambia il set di caratteri in utf8 e controlla
+            // change character set to utf8 and check it
             if (!$this->db_connection->set_charset("utf8")) {
                 $this->errors[] = $this->db_connection->error;
             }
 
-            // se non ci sono errori di connessione (= connessione al database funzionante)
+            // if no connection errors (= working database connection)
             if (!$this->db_connection->connect_errno) {
 
-                // esegue l'escape dei dati POST
+                // escape the POST stuff
                 $user_name = $this->db_connection->real_escape_string($_POST['user_name']);
 
-                // query al database, ottenendo tutte le informazioni dell'utente selezionato (consente l'accesso tramite indirizzo email nel campo username)
+                // database query, getting all the info of the selected user (allows login via email address in the
+                // username field)
                 $sql = "SELECT user_name, user_email, user_password_hash
                         FROM users
                         WHERE user_name = '" . $user_name . "' OR user_email = '" . $user_name . "';";
                 $result_of_login_check = $this->db_connection->query($sql);
 
-                // se questo utente esiste
+                // if this user exists
                 if ($result_of_login_check->num_rows == 1) {
 
-                    // ottieni la riga di risultato (come un oggetto)
+                    // get result row (as an object)
                     $result_row = $result_of_login_check->fetch_object();
 
-                    // utilizzando la funzione password_verify() di PHP 5.5 per verificare se la password fornita corrisponde all'hash della password di quell'utente
+                    // using PHP 5.5's password_verify() function to check if the provided password fits
+                    // the hash of that user's password
                     if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
 
-                        // scrivi i dati dell'utente nella SESSION di PHP (un file sul tuo server)
+                        // write user data into PHP SESSION (a file on your server)
                         $_SESSION['user_name'] = $result_row->user_name;
                         $_SESSION['user_email'] = $result_row->user_email;
                         $_SESSION['user_login_status'] = 1;
 
                     } else {
-                        $this->errors[] = "Password errata. Riprova.";
+                        $this->errors[] = "Wrong password. Try again.";
                     }
                 } else {
-                    $this->errors[] = "Questo utente non esiste.";
+                    $this->errors[] = "This user does not exist.";
                 }
             } else {
-                $this->errors[] = "Problema di connessione al database.";
+                $this->errors[] = "Database connection problem.";
             }
         }
     }
 
     /**
-     * esegue il logout
+     * perform the logout
      */
     public function doLogout()
     {
-        // elimina la sessione dell'utente
+        // delete the session of the user
         $_SESSION = array();
         session_destroy();
-        // restituisce un piccolo messaggio di feedback
-        $this->messages[] = "Hai effettuato il logout.";
+        // return a little feeedback message
+        $this->messages[] = "You have been logged out.";
 
     }
 
     /**
-     * semplicemente restituisce lo stato attuale dell'accesso dell'utente
-     * @return boolean stato di accesso dell'utente
+     * simply return the current state of the user's login
+     * @return boolean user's login status
      */
     public function isUserLoggedIn()
     {
         if (isset($_SESSION['user_login_status']) AND $_SESSION['user_login_status'] == 1) {
             return true;
         }
-        // valore di default di ritorno
+        // default return
         return false;
     }
 }
-?>
