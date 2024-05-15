@@ -1,6 +1,13 @@
-<!-- if you need user information, just put them into the $_SESSION variable and output them here -->
-Hey, <?php echo $_SESSION['user_name']; ?>. You are logged in.
-Try to close this browser tab and open it again. Still logged in! ;)
-
-<!-- because people were asking: "index.php?logout" is just my simplified form of "index.php?logout=true" -->
-<a href="index.php?logout">Logout</a>
+<div class="container">
+  <div class="row">
+    <div class="col-md-8">
+      <div class="alert alert-light border" role="alert">
+        Ciao <?php echo $_SESSION['user_name']; ?>. Sei loggato.
+        Prova a chiudere questa scheda del browser e riaprirla. Rimani ancora loggato!
+      </div>
+    </div>
+    <div class="col-md-4 mt-2">
+      <button type="button" class="btn btn-dark"><a href="index.php?logout">Logout</a></button>
+    </div>
+  </div>
+</div>

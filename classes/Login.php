@@ -1,9 +1,5 @@
 <?php
 
-/**
- * Class login
- * handles the user's login and logout process
- */
 class Login
 {
     /**
@@ -124,4 +120,4 @@ class Login
         // default return
         return false;
     }
-}
+} 

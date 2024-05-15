@@ -1,6 +1,6 @@
 <?php
 
-// Configuration for: Database Connection
+
 
 
 define("DB_HOST", "localhost");
